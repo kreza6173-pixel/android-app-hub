@@ -1,6 +1,6 @@
 id=privacy_audit
 name=Privacy Audit
-version=1.0.0
+version=1.0
 versionCode=1
 author=privshell
 description=Scan installed apps for sensitive permissions (camera, mic, location, storage) and revoke them with one tap. ADB/Shizuku on non-root, extra tools on root.
