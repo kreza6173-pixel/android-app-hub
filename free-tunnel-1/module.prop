@@ -1,0 +1,9 @@
+id=free_tunnel
+name=Free Net Tunnel
+version=1.0.0
+versionCode=1
+author=privshell
+description=Bypass DPI/SNI-based blocking via SNI spoofing (Xray), DNSTT, or Psiphon+V2Ray. Root gives full transparent routing; ADB-only gives a system proxy + private DNS.
+webui=webui
+action=action.sh
+usesShellBridge=true

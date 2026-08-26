@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Free Net Tunnel</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">✦</span>
+      <span class="brand-text">FREE<span class="accent">·</span>TUNNEL</span>
+    </div>
+    <div class="status-chips">
+      <span class="chip chip-muted" id="chipMode">MODE: —</span>
+      <span class="chip chip-muted" id="chipConn">LINK: down</span>
+    </div>
+  </header>
+
+  <div id="bridgeWarning" class="bridge-warning hidden">
+    <div class="bridge-warning-title">Shell bridge unavailable</div>
+    <p>This dashboard needs <code>window.Shizuku</code>. Enable the module with access
+      set to <strong>Full</strong> (or Custom + WebUI Shell Bridge), then reopen this
+      page from the module card.</p>
+  </div>
+
+  <main id="mainContent">
+
+    <section class="binaries-panel" id="binariesPanel">
+      <div class="panel-title">Binaries found</div>
+      <div class="binaries-grid" id="binariesGrid"></div>
+      <p class="panel-note">Nothing is downloaded automatically — see
+        <code>bin/README.md</code>. <code>rstaspoof.go</code> is bundled under
+        <code>bin/src/</code>; build it once and it shows up here.</p>
+
+      <div class="import-row">
+        <input type="text" id="importSrcPath" placeholder="/sdcard/rstaspoof (built in Termux, copied to shared storage)">
+        <select id="importTargetName">
+          <option value="rstaspoof">rstaspoof</option>
+          <option value="xray">xray</option>
+          <option value="dnstt-client">dnstt-client</option>
+          <option value="psiphon">psiphon</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="btnImportBinary">Import</button>
+      </div>
+      <p class="panel-note">Termux can't write into <code>/data/local/tmp</code>
+        directly (different app, no permission there) — build in Termux, copy the
+        result to shared storage (e.g. <code>~/storage/shared/rstaspoof</code> after
+        <code>termux-setup-storage</code>), then import it from here. This runs with
+        the shell/root privilege the WebUI has, so it can actually write to the
+        module's bin folder.</p>
+    </section>
+
+
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="sni">SNI Spoof</button>
+      <button class="tab" data-tab="scanner">Scanner</button>
+      <button class="tab" data-tab="converter">Converter</button>
+      <button class="tab" data-tab="dnstt">DNSTT</button>
+      <button class="tab" data-tab="psiphon">Psiphon+V2Ray</button>
+    </nav>
+
+    <!-- ===== SNI Spoof (rstaspoof) ===== -->
+    <section class="method-panel" id="panel-sni">
+      <p class="method-desc">Runs <code>rstaspoof</code> (your own tool) as a local
+        forwarder on 127.0.0.1. It needs no root — the real mechanism is two ordinary
+        TCP sockets: a short decoy connection carrying a fake SNI, plus TLS-record
+        fragmentation of the real ClientHello. Point your VLESS/Trojan client at the
+        listen port below instead of the real server (the Converter tab does this for
+        a whole config automatically).</p>
+
+      <div class="form-grid">
+        <label>Local listen port<input type="number" id="sni-listenport" value="40443"></label>
+        <label>Method
+          <select id="sni-method">
+            <option value="combined">combined (recommended)</option>
+            <option value="fragment">fragment</option>
+            <option value="fake_sni">fake_sni</option>
+          </select>
+        </label>
+        <label>Fragment strategy
+          <select id="sni-fragstrategy">
+            <option value="sni_split">sni_split (recommended)</option>
+            <option value="half">half</option>
+            <option value="multi">multi</option>
+            <option value="tls_record_frag">tls_record_frag</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="candidates-head">
+        <span class="panel-title" style="margin:0">Candidates</span>
+        <button class="btn btn-ghost btn-sm" id="btnAddCandidate">+ Add</button>
+      </div>
+      <p class="panel-note">Fake SNI + the real edge IP:port you rotate between —
+        exactly what you switch by hand today. The Scanner tab can test and add to
+        this list for you.</p>
+      <div id="candidateList" class="candidate-list"></div>
+
+      <label class="toggle-inline"><input type="checkbox" id="sni-autofailover" checked>
+        <span>Auto-failover: if the active candidate gets BLOCKED repeatedly, switch to
+          the next one automatically</span></label>
+      <p class="panel-note">Polls every 25s while running. If your device asks you to
+        confirm every shell command individually, that's one prompt per poll — turn
+        this off and switch candidates manually if that gets in the way.</p>
+
+      <div class="method-actions">
+        <button class="btn btn-primary" id="btnStartSni">▶ Start</button>
+        <button class="btn btn-danger" id="btnStopSni">■ Stop</button>
+        <button class="btn btn-ghost" id="btnForceKillSni">⛌ Force kill</button>
+      </div>
+      <div class="live-stats hidden" id="sniLiveStats"></div>
+    </section>
+
+    <!-- ===== Scanner ===== -->
+    <section class="method-panel hidden" id="panel-scanner">
+      <p class="method-desc">TCP-checks each candidate's real IP:port (the same
+        "[OK]/[FAIL] domain → ip → port" report you already generate by hand). No DNS
+        magic — you give the domain+IP pairs, it just confirms they're reachable
+        right now.</p>
+      <div id="scanCandidateList" class="candidate-list"></div>
+      <button class="btn btn-ghost btn-sm" id="btnAddScanCandidate">+ Add</button>
+      <div class="method-actions">
+        <button class="btn btn-primary" id="btnRunScan">▶ Scan all</button>
+      </div>
+      <div id="scanResults" class="scan-results"></div>
+    </section>
+
+    <!-- ===== Converter ===== -->
+    <section class="method-panel hidden" id="panel-converter">
+      <p class="method-desc">Paste a full v2rayNG-style JSON profile (the same shape
+        your app exports/imports — not a subscription link). This rewrites the
+        <code>"proxy"</code> outbound to dial 127.0.0.1 at the SNI-spoof listen port,
+        randomizes the case of the TLS SNI, sets fingerprint to <code>unsafe</code>,
+        and adds the two-stage ClientHello fragmentation block — matching what you
+        showed us, exactly. Everything else in the config (dns, routing, policy,
+        other outbounds) is left untouched.</p>
+      <textarea id="convInput" class="config-textarea" placeholder="Paste the full JSON profile here…"></textarea>
+      <div class="form-grid">
+        <label class="toggle-inline"><input type="checkbox" id="convRandomizeCase" checked><span>Randomize SNI case</span></label>
+        <label class="toggle-inline"><input type="checkbox" id="convFinalmask" checked><span>Add fragmentation block</span></label>
+      </div>
+      <div class="method-actions">
+        <button class="btn btn-primary" id="btnConvert">Convert</button>
+        <button class="btn btn-ghost" id="btnCopyConverted">Copy result</button>
+      </div>
+      <textarea id="convOutput" class="config-textarea" readonly placeholder="Converted config appears here…"></textarea>
+    </section>
+
+    <!-- ===== DNSTT ===== -->
+    <section class="method-panel hidden" id="panel-dnstt">
+      <p class="method-desc">Tunnels a raw TCP stream inside DNS queries via a DoH/DoT
+        resolver to a <code>dnstt-server</code> you control. On its own this is just a
+        local TCP port — pair it with something that can dial through that port (e.g.
+        an SSH client with <code>-D</code>) for a full proxy.</p>
+      <div class="form-grid">
+        <label>DoH resolver URL<input type="text" id="dnstt-doh" placeholder="https://1.1.1.1/dns-query"></label>
+        <label>Tunnel domain<input type="text" id="dnstt-domain" placeholder="t.example.com"></label>
+        <label>Server public key<input type="text" id="dnstt-pubkey" placeholder="hex pubkey from dnstt-server"></label>
+        <label>Local listen port<input type="number" id="dnstt-localport" placeholder="7000" value="7000"></label>
+      </div>
+      <div class="method-actions">
+        <button class="btn btn-primary" data-start="dnstt">▶ Start</button>
+        <button class="btn btn-danger" data-stop="dnstt">■ Stop</button>
+      </div>
+    </section>
+
+    <!-- ===== Psiphon + V2Ray ===== -->
+    <section class="method-panel hidden" id="panel-psiphon">
+      <p class="method-desc">Psiphon first (local SOCKS, default port 10808 to match
+        your usual setup), then your V2Ray/Xray client dials out through that SOCKS
+        proxy — exactly your manual routine, just supervised.</p>
+      <div class="form-grid">
+        <label>Psiphon config file path<input type="text" id="psi-config" placeholder="/data/local/tmp/free_tunnel/configs/psiphon.json"></label>
+        <label>Psiphon local SOCKS port<input type="number" id="psi-socksport" value="10808"></label>
+        <label>Xray server address<input type="text" id="psi-server" placeholder="1.2.3.4 or edge.example.com"></label>
+        <label>Xray server port<input type="number" id="psi-port" placeholder="443" value="443"></label>
+        <label>UUID / password<input type="text" id="psi-id" placeholder="client uuid or trojan password"></label>
+        <label>SNI<input type="text" id="psi-sni" placeholder="tls server name"></label>
+      </div>
+      <div class="method-actions">
+        <button class="btn btn-primary" data-start="psiphon">▶ Start</button>
+        <button class="btn btn-danger" data-stop="psiphon">■ Stop</button>
+      </div>
+    </section>
+
+    <!-- ===== Routing ===== -->
+    <section class="routing-panel">
+      <div class="panel-title">Routing</div>
+      <div id="routingRoot" class="hidden">
+        <label class="toggle-inline"><input type="checkbox" id="routeAllTcp"><span>Redirect all TCP 80/443 through the active tunnel (root, iptables)</span></label>
+      </div>
+      <div id="routingNonRoot" class="hidden">
+        <label class="toggle-inline"><input type="checkbox" id="setSystemProxy"><span>Set as system HTTP proxy (apps that honor it only)</span></label>
+      </div>
+      <label class="toggle-inline"><input type="checkbox" id="setPrivateDns"><span>Also set Private DNS (DoT) to:</span></label>
+      <input type="text" id="privateDnsHost" placeholder="dns.example.com" class="inline-input">
+      <div class="method-actions">
+        <button class="btn btn-primary" id="btnApplyRouting">Apply routing</button>
+        <button class="btn btn-ghost" id="btnClearRouting">Clear routing</button>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="console" id="console">
+    <button class="console-handle" id="consoleHandle">
+      <span>▍ console</span>
+      <span id="consoleCount">0 entries</span>
+    </button>
+    <div class="console-body" id="consoleBody"></div>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
