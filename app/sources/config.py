@@ -74,6 +74,7 @@ SOURCES = [
         "description": "Generated summary of apps discovered by timschneeb's app-crawler tool.",
         "tags": ["crawler", "catalog"],
     },
+  ,
   {
     "id": "shizuku-dhizuku-list",
     "type": "repo",
@@ -81,7 +82,7 @@ SOURCES = [
     "category": "shizuku",
     "title": "Shizuku & Dhizuku App List",
     "description": "Curated list of apps supporting Shizuku and Dhizuku APIs for privileged operations without root."
-  },
+  }
 ]
 
 SOURCE_BY_ID = {s["id"]: s for s in SOURCES}
