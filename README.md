@@ -1,10 +1,10 @@
 # Android App Hub
 
-A self-hosted dashboard that aggregates six Android app/module directories
+A self-hosted dashboard that aggregates seven Android app/module directories
 from GitHub into one clean, categorized, searchable web UI — designed to
 run locally on-device via **Termux**, with zero cloud dependency.
 
-Every time you start it, it automatically re-fetches all six sources,
+Every time you start it, it automatically re-fetches all seven sources,
 diffs the new content against the previous run, and logs what changed
 in a per-source **Changelog** tab.
 
@@ -18,6 +18,7 @@ in a per-source **Changelog** tab.
 | [krishna3163/best-root-apps-for-android](https://github.com/krishna3163/best-root-apps-for-android) | Hand-picked apps/modules for rooted devices |
 | [timschneeb/awesome-shizuku](https://github.com/timschneeb/awesome-shizuku) | The original, most comprehensive curated list of Shizuku apps (9.8k★) |
 | [timschneeb/app-crawler](https://github.com/timschneeb/app-crawler/blob/master/SUMMARY.md) | Generated summary from the app-crawler tool |
+| [UrkeJH/ShizukuDhizuku-list](https://github.com/UrkeJH/ShizukuDhizuku-list) | Curated list of Shizuku/Dhizuku-compatible apps (489★) |
 
 Sources are declared in [`app/sources/config.py`](app/sources/config.py) —
 add a new GitHub repo, user, or file by appending one entry to that list.
