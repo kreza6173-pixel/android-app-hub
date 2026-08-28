@@ -75,12 +75,13 @@ SOURCES = [
         "tags": ["crawler", "catalog"],
     },
     {
-    "id": "shizuku-dhizuku-list",
-    "type": "repo",
-    "repo": "UrkeJH/ShizukuDhizuku-list",
-    "category": "shizuku",
-    "title": "Shizuku & Dhizuku App List",
-    "description": "Curated list of apps supporting Shizuku and Dhizuku APIs for privileged operations without root."
+        "id": "shizuku-dhizuku-list",
+        "title": "ShizukuDhizuku List",
+        "owner": "UrkeJH",
+        "repo": "ShizukuDhizuku-list",
+        "kind": "readme",
+        "description": "Curated list of apps supporting Shizuku and Dhizuku APIs for privileged operations without root — 489 stars.",
+        "tags": ["shizuku", "dhizuku", "no-root"],
     },
 ]
 
