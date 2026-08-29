@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android App Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="brand-mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand">Android App Hub</span>
+      <span class="prompt">user<span class="prompt-sep">@</span>android-app-hub<span class="prompt-sep">:~$</span></span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="status-line" class="status-line">initializing…</span>
+    <button id="export-btn" class="btn-ghost" title="Export catalog + changelog as Markdown">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+      Export
+    </button>
+    <button id="refresh-btn" class="btn-refresh">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-label">Sources <span id="source-count" class="muted"></span></div>
+    <div id="source-list" class="source-list"></div>
+  </nav>
+
+  <main class="main">
+    <div class="main-toolbar">
+      <div class="tabs">
+        <button class="tab active" data-tab="catalog">Catalog</button>
+        <button class="tab" data-tab="changelog">Changelog</button>
+      </div>
+      <input id="search-box" class="search-box" type="search" placeholder="Search apps, modules, descriptions…" />
+    </div>
+
+    <section id="view-catalog" class="view">
+      <div id="catalog-header" class="catalog-header"></div>
+      <div id="catalog-body" class="catalog-body">
+        <div class="empty-state">Loading sources for the first time — this can take a few seconds.</div>
+      </div>
+    </section>
+
+    <section id="view-changelog" class="view hidden">
+      <div class="catalog-header">
+        <div class="changelog-head-row">
+          <div>
+            <h2>Changelog</h2>
+            <p class="muted">Grouped by source. Every entry is a real diff between two fetches — nothing is summarized or invented.</p>
+          </div>
+          <div class="day-filter" id="day-filter">
+            <button class="day-chip" data-days="7">7d</button>
+            <button class="day-chip active" data-days="30">30d</button>
+            <button class="day-chip" data-days="90">90d</button>
+          </div>
+        </div>
+      </div>
+      <div id="changelog-body" class="changelog-body"></div>
+    </section>
+  </main>
+</div>
+
+<footer class="footer">
+  <span>Data pulled live from the GitHub sources listed in <code>app/sources/config.py</code>.</span>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
